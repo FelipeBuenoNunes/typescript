@@ -11,7 +11,7 @@ class InsertSql<type> {
         this.table = table
     }
 
-    async insert(...ignore: string[]): Promise<Error|void> {
+    async insert(...ignore: string[]): Promise<Error|string> {
         try {
         let keys = "(", values = "VALUES(";
         Object.entries(this.contents).forEach((entrie) => {
@@ -22,9 +22,9 @@ class InsertSql<type> {
         
         values = values.replace(/.$/, ' )');
         keys = keys.replace(/.$/, ' )');
-        const sql = `INSERT INTO ${this.table} ${keys} ${values}`
+        const sql = `INSERT INTO ${this.table} ${keys} ${values} RETURNING id`
         console.log(sql)
-        await InsertSql.connectionDB.query(sql)
+        return (await InsertSql.connectionDB.query(sql)).rows[0].id
         }
         catch(err) {
             return err as Error
@@ -35,11 +35,12 @@ class InsertSql<type> {
         try {
             const temp = this.contents as any
             if(ignore.includes("fgk_account_to")){
-                await InsertSql.connectionDB.query(`UPDATE accounts SET balance = balance+${temp.value} WHERE id='${temp.fgk_account_from}'`);
+                await InsertSql.connectionDB.query(`UPDATE accounts SET balance = balance+${temp.total} WHERE id='${temp.fgk_account_from}'`);
                 return
             }
-            await InsertSql.connectionDB.query(`UPDATE accounts SET balance = balance+${temp.value-1} WHERE id='${temp.fgk_account_to}'`);
-            await InsertSql.connectionDB.query(`UPDATE accounts SET balance = balance-${temp.value} WHERE id='${temp.fgk_account_from}'`);
+            if(await this.balanceSufficient()) throw new Error("Insufficient balance")
+            await InsertSql.connectionDB.query(`UPDATE accounts SET balance = balance+${temp.value} WHERE id='${temp.fgk_account_to}'`);
+            await InsertSql.connectionDB.query(`UPDATE accounts SET balance = balance-${temp.total} WHERE id='${temp.fgk_account_from}'`);
         }
         catch(err){
             return err as Error
@@ -49,11 +50,21 @@ class InsertSql<type> {
     async withdrawals(...ignore: string[]): Promise<Error|void> {
         try {
             const temp = this.contents as any
-            await InsertSql.connectionDB.query(`UPDATE accounts SET balance = balance-${temp.value+4} WHERE id='${temp.fgk_account_from}'`);
+            if(await this.balanceSufficient()) throw new Error("Insufficient balance")
+            console.log("úe")
+            await InsertSql.connectionDB.query(`UPDATE accounts SET balance = balance-${temp.total} WHERE id='${temp.fgk_account_from}'`);
         }
         catch(err){
             return err as Error
         }
+    }
+
+    private async balanceSufficient(): Promise<boolean> {
+        const temp = this.contents as any;
+        const balance =  (await InsertSql.connectionDB.query(`SELECT balance FROM accounts`)).rows[0].balance;
+        console.log(balance, temp.total)
+        if(temp.total >= balance) return true;
+        return false;
     }
 }
 

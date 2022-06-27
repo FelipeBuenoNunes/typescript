@@ -16,7 +16,6 @@ class CreateClient extends ControllerModel{
 
     public async handle(req: Request, res: Response) {
         try {
-            const mock = {"msg": "certo"}
             
             if(req.body) this.data = this.parse(req.body)
             else throw new Error("Missing data")
@@ -24,11 +23,11 @@ class CreateClient extends ControllerModel{
             const errors = new validateAttrClient(this.data as Client).containsErrors();
             if(errors)
                 throw new Error(errors) 
+
+            const response = await new InsertSql(this.data, "clients").insert(...this.ignoreTables)
+            if(typeof response === "object") throw response;
             
-                const err = await new InsertSql(this.data, "clients").insert(...this.ignoreTables)
-                if(err) throw err
-            
-            this.Sucess(res, 201, JSON.parse(JSON.stringify(mock)))
+            this.Sucess(res, 200, JSON.parse(JSON.stringify({id: response})))
         } catch(err){
             console.log(err)
             this.Error(res, 400, err as Error)

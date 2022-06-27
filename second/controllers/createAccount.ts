@@ -25,10 +25,10 @@ class CreateAccount extends ControllerModel{
             if(errors)
                 throw new Error(errors) 
             
-            const err = await new InsertSql(this.data, "accounts").insert(...this.ignoreTables)
-            if(err) throw err
-            
-            this.Sucess(res, 201, JSON.parse(JSON.stringify(mock)))
+            const response = await new InsertSql(this.data, "accounts").insert(...this.ignoreTables)
+            if(typeof response === "object") throw response;
+
+            this.Sucess(res, 200, JSON.parse(JSON.stringify({id: response})))
         } catch(err){
             console.log(err)
             this.Error(res, 400, err as Error)

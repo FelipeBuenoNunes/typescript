@@ -24,14 +24,15 @@ class Deposit extends ControllerModel{
             }
 
             const sql = new InsertSql(this.data, "transactions");
-            const err = await sql.insert(...this.ignoreTables);
-            if(err) throw err;
-
+            
             const error = await sql.updateBalance(...this.ignoreTables);
             if(error) throw error;
             
+            const response = await sql.insert(...this.ignoreTables);
+            if(typeof response === "object") throw response;
 
-            this.Sucess(res, 200, JSON.parse(JSON.stringify({sucesso: "Uhull"})))
+
+            this.Sucess(res, 200, JSON.parse(JSON.stringify({id: response})))
         }
         catch(err){
             console.log(err)
@@ -43,11 +44,14 @@ class Deposit extends ControllerModel{
         const err = validateValue(value)
         if(err) this.errors.push(err)
         this.data = {
-            //menos 1%
-            value: parseFloat(value)-(parseFloat(value)/100),
+            rate: 1,
+            value: parseFloat(value),
+            total: 0,
             fgk_type: 1,
             fgk_account_from: from
         }
+
+        this.data.total = this.data.value - ((this.data.value/100)*this.data.rate)
     }
 }
 

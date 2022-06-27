@@ -24,14 +24,14 @@ class Transfer extends ControllerModel {
             }
 
             const sql = new InsertSql(this.data, "transactions");
-            const err = await sql.insert(...this.ignoreTables);
-            if(err) throw err;
-
             const error = await sql.updateBalance(...this.ignoreTables);
             if(error) throw error;
             
+            const response = await sql.insert(...this.ignoreTables);
+            if(typeof response === "object") throw response;
 
-            this.Sucess(res, 200, JSON.parse(JSON.stringify({sucesso: "Uhull"})))
+
+            this.Sucess(res, 200, JSON.parse(JSON.stringify({id: response})))
         }
         catch(err){
             console.log(err)
@@ -44,10 +44,14 @@ class Transfer extends ControllerModel {
         if(err) this.errors.push(err)
         this.data = {
             value: parseFloat(value),
+            rate: 1,
+            total: 0,
             fgk_type: 2,
             fgk_account_from: from,
             fgk_account_to: to
         }
+
+        this.data.total = this.data.value + this.data.rate;
     }
 }
 

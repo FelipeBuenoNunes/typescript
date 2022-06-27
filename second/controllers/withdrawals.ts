@@ -25,13 +25,15 @@ class Withdrawals extends ControllerModel {
             }
 
             const sql = new InsertSql(this.data, "transactions");
-            const err = await sql.insert(...this.ignoreTables);
-            if(err) throw err;
-
+            
             const error = await sql.withdrawals(...this.ignoreTables);
             if(error) throw error;
-            
-            this.Sucess(res, 200, JSON.parse(JSON.stringify({sucesso: "Uhull"})))
+
+            const response = await sql.insert(...this.ignoreTables);
+            if(typeof response === "object") throw response;
+
+
+            this.Sucess(res, 200, JSON.parse(JSON.stringify({id: response})))
         }
         catch(err){
             console.log(err)
@@ -44,9 +46,12 @@ class Withdrawals extends ControllerModel {
         if(err) this.errors.push(err)
         this.data = {
             value: parseFloat(value),
+            rate: 4,
+            total: 0,
             fgk_type: 3,
             fgk_account_from: from
         }
+        this.data.total += this.data.rate
     }
 }
 
