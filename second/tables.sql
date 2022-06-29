@@ -39,5 +39,5 @@ CREATE TABLE "transactions" (
 );
 
 INSERT INTO "types_transactions" ("name") VALUES('DEPOSIT');
-INSERT INTO "types_transactions" ("name") VALUES('TRANSFER');
 INSERT INTO "types_transactions" ("name") VALUES('WITHDRAWALS');
+INSERT INTO "types_transactions" ("name") VALUES('TRANSFER');
