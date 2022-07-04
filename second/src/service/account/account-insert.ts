@@ -50,7 +50,6 @@ class AccountInsertService {
             "birth_date": this.data.birth_date,
             "email": this.data.email
         }
-        console.log(this.client)
     }
     private async createAccount() {
         try {
